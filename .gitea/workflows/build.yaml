@@ -12,4 +12,4 @@ jobs:
         flavor: [static, dynamic]
     steps:
       - uses: actions/checkout@v3
-      - run: nix build .#packages.${{ matrix.arch }}.${{ matrix.flavor }}
+      - run: nix build -L .#packages.${{ matrix.arch }}.${{ matrix.flavor }}
