@@ -16,5 +16,5 @@ callPackage ./build.nix rec {
   gambit-params = gambit-support.unstable-params;
   gambit-git-version = "4.9.5-130-g09335d95";
   gambit-stampYmd = "20240407";
-  gambit-stampHms = "075009";
+  gambit-stampHms = "75009";
 }
