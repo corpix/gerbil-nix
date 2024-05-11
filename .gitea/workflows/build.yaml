@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64-linux]
-        flavor: [static, dynamic]
+        flavor: [static, shared]
     steps:
       - uses: actions/checkout@v3
       - run: nix build -L .#packages.${{ matrix.arch }}.${{ matrix.flavor }}

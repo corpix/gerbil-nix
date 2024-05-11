@@ -28,13 +28,15 @@
               jq
             ;
           };
+          static = callPackage ./package.nix { enableShared = false; };
+          shared = callPackage ./package.nix { enableShared = true; };
         in {
-          packages.default = callPackage ./package.nix {};
-          packages.static = callPackage ./package.nix { enableShared = true; };
-          packages.dynamic = callPackage ./package.nix { enableShared = false; };
+          packages.default = static;
+          packages.static = static;
+          packages.shared = shared;
           devShells.default = pkgs.mkShell {
             name = "gerbil";
-            packages = packages;
+            packages = packages ++ [static];
           };
         });
 }
