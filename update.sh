@@ -36,8 +36,8 @@ cd src/gambit
 gambit_tag=$(git describe --abbrev=0 --tags)
 gambit_version=$(echo $gambit_tag | sed 's/^v//g')
 gambit_git_version="$gambit_version-$(git rev-list --count $gambit_tag..HEAD)-g$(git rev-parse --short HEAD)"
-gambit_stamp_ymd=$(git --no-pager log -1 --format="%ad" --date=format:"%Y%m%d")
-gambit_stamp_hms=$(git --no-pager log -1 --format="%ad" --date=format:"%k%M%S")
+gambit_stamp_ymd=$(git --no-pager log -1 --format="%ad" --date=format:"%Y%m%d" | sed 's/^\s*//g')
+gambit_stamp_hms=$(git --no-pager log -1 --format="%ad" --date=format:"%k%M%S" | sed 's/^\s*//g')
 
 ##
 
