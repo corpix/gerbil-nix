@@ -1,0 +1,15 @@
+name: build
+on:
+  pull_request:
+  push:
+    branches: master
+jobs:
+  build:
+    runs-on: nix
+    strategy:
+      matrix:
+        arch: [x86_64-linux]
+        flavor: [static, dynamic]
+    steps:
+      - uses: actions/checkout@v3
+      - run: nix build .#packages.${{ matrix.arch }}.${{ matrix.flavor }}
