@@ -96,7 +96,7 @@ in stdenv.mkDerivation rec {
     ( cd src && sh build.sh )
 
   '' + (optionalString enableShared ''
-    substituteInPlace build/lib/libgerbil.so.ldd \
+    substituteInPlace build/lib/libgerbil.ldd \
       --replace '(' '(${concatStringsSep " " (map (x: ''"${x}"'' ) extraLdOptions)}'
   '') + ''
     runHook postBuild
