@@ -5,38 +5,47 @@
   };
 
   outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem
-      (arch:
-        let
-          pkgs = nixpkgs.legacyPackages.${arch}.pkgs;
+    let
+      mkArch = arch: let
+        pkgs = import nixpkgs {
+          system = arch;
+          overlays = [self.overlays.default];
+        };
 
+        inherit (pkgs)
+          callPackage
+          writeScript
+          stdenv
+        ;
+        inherit (pkgs.lib)
+          attrValues
+          filter
+        ;
+
+        packages = attrValues {
           inherit (pkgs)
-            callPackage
-            writeScript
-            stdenv
-          ;
-          inherit (pkgs.lib)
-            attrValues
-            filter
-          ;
+            coreutils
+            gnumake
+            gnused
+            jq
 
-          packages = attrValues {
-            inherit (pkgs)
-              coreutils
-              gnumake
-              gnused
-              jq
-            ;
-          };
-          static = callPackage ./package.nix { enableShared = false; };
-          shared = callPackage ./package.nix { enableShared = true; };
-        in {
-          packages.default = static;
-          packages.static = static;
-          packages.shared = shared;
-          devShells.default = pkgs.mkShell {
-            name = "gerbil";
-            packages = packages ++ [static];
-          };
-        });
+            gerbil-git
+          ;
+        };
+        static = callPackage ./package.nix { enableShared = false; };
+        shared = callPackage ./package.nix { enableShared = true; };
+      in {
+        packages.default = static;
+        packages.static = static;
+        packages.shared = shared;
+        devShells.default = pkgs.mkShell {
+          name = "gerbil";
+          inherit packages;
+        };
+      };
+    in (flake-utils.lib.eachDefaultSystem mkArch) // {
+      overlays.default = _: prev: {
+        gerbil-git = self.packages.${prev.stdenv.hostPlatform.system}.default;
+      };
+    };
 }
