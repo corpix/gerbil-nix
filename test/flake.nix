@@ -1,6 +1,6 @@
 {
   inputs = {
-    gerbil.url = "git+file:../";
+    gerbil.url = "tarball+https://git.tatikoma.dev/corpix/gerbil-nix/archive/v2024-05-31.16.tar.gz";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
