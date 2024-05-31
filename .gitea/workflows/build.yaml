@@ -15,4 +15,5 @@ jobs:
       - run: nix build --print-out-paths -L .#packages.${{ matrix.arch }}.${{ matrix.flavor }} > out-paths
       - run: >-
           gcroot=$(echo ${{ github.repository }} | sed 's/\//-/g').${{ matrix.arch }}.${{ matrix.flavor }};
+          rm -f /nix/var/nix/gcroots/per-user/$(whoami)/$gcroot || true
           ln -s $(tail -n 1 out-paths) /nix/var/nix/gcroots/per-user/$(whoami)/$gcroot
