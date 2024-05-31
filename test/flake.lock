@@ -42,14 +42,17 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1717179104,
-        "narHash": "sha256-dyiX6OlD7YPenjiCfdmnLcj5eq7g78AMs3R4wRwy5Y4=",
-        "type": "tarball",
-        "url": "https://git.tatikoma.dev/corpix/gerbil-nix/archive/v2024-05-31.18.tar.gz"
+        "lastModified": 1717179441,
+        "narHash": "sha256-1B6kptrt0sEeCptP1aqVGDvxxOMaGZNNfDJYpTRE1y8=",
+        "ref": "master",
+        "rev": "b3b91af4e267f3a1b808b540477323ebe1eab05b",
+        "revCount": 20,
+        "type": "git",
+        "url": "file:../"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://git.tatikoma.dev/corpix/gerbil-nix/archive/v2024-05-31.18.tar.gz"
+        "type": "git",
+        "url": "file:../"
       }
     },
     "nixpkgs": {
