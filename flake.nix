@@ -38,6 +38,9 @@
         packages.default = static;
         packages.static = static;
         packages.shared = shared;
+        stdenv.default = callPackage ./stdenv.nix { gerbil = static; };
+        stdenv.static = callPackage ./stdenv.nix { gerbil = static; };
+        stdenv.shared = callPackage ./stdenv.nix { gerbil = shared; };
         devShells.default = pkgs.mkShell {
           name = "gerbil";
           inherit packages;
