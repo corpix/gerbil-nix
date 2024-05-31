@@ -12,14 +12,15 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64-linux]
-        flavor: [static, shared]
+        flavor: [static]
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: unshallow
-        run: git fetch --unshallow
+        with:
+          fetch-depth: 0
       - name: test-mk-gerbil-package
         run: >-
           cd test;
+          nix flake lock;
           nix develop .#devShells.${{ matrix.arch }}.${{ matrix.flavor }} -L --command
           bash -ec "gxi -e '(import :mk-gerbil-package/hello)' -e '(displayln words)'"

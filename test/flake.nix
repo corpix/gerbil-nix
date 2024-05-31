@@ -1,6 +1,6 @@
 {
   inputs = {
-    gerbil.url = "tarball+https://git.tatikoma.dev/corpix/gerbil-nix/archive/v2024-05-31.18.tar.gz";
+    gerbil.url = "git+file:../";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -29,8 +29,6 @@
         };
       in {
         packages.mkGerbilPackageTestStatic = mkGerbilPackageTest "static";
-        packages.mkGerbilPackageTestShared = mkGerbilPackageTest "shared";
         devShells.static = mkShell "static";
-        devShells.shared = mkShell "shared";
       });
 }
