@@ -11,7 +11,7 @@ jobs:
     runs-on: nix
     strategy:
       matrix:
-        arch: [x86_64-linux]
+        arch: [x86_64-linux, aarch64-linux]
         flavor: [static]
     steps:
       - name: checkout

@@ -1,6 +1,6 @@
 {
   inputs = {
-    gerbil.url = "git+file:../";
+    gerbil.url = "git+file:./../.";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
