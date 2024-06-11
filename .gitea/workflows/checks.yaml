@@ -1,4 +1,4 @@
-name: test
+name: checks
 on:
   pull_request:
   push:
@@ -7,7 +7,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 jobs:
-  test:
+  check:
     runs-on: nix
     strategy:
       matrix:
