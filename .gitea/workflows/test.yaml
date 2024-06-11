@@ -20,6 +20,7 @@ jobs:
           fetch-depth: 0
       - name: test-mk-gerbil-package
         run: >-
+          set -x;
           cd test;
           nix flake lock;
           nix develop .#devShells.${{ matrix.arch }}.${{ matrix.flavor }} -L --command
