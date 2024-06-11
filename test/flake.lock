@@ -42,17 +42,14 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1717179441,
-        "narHash": "sha256-1B6kptrt0sEeCptP1aqVGDvxxOMaGZNNfDJYpTRE1y8=",
-        "ref": "master",
-        "rev": "b3b91af4e267f3a1b808b540477323ebe1eab05b",
-        "revCount": 20,
-        "type": "git",
-        "url": "file:../"
+        "lastModified": 0,
+        "narHash": "sha256-Ygav+VhO0uG8DolzmKTe/bCOwbHe7vCFy/yQk7LIQps=",
+        "path": "/nix/store/lgjhrxxq4wc1aic9vk45dlm7na9n2x2c-source",
+        "type": "path"
       },
       "original": {
-        "type": "git",
-        "url": "file:../"
+        "path": "/nix/store/lgjhrxxq4wc1aic9vk45dlm7na9n2x2c-source",
+        "type": "path"
       }
     },
     "nixpkgs": {
