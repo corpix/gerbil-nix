@@ -8,7 +8,7 @@ A package overlay which builds Gerbil Scheme.
 $ make update
 ```
 
-results will be written into `package.nix`
+results will be written into `gerbil.nix`
 
 ## building gerbil packages
 

@@ -2,7 +2,7 @@
 , gambit-unstable, gambit-support
 , enableShared ? true
 }:
-callPackage ./build.nix rec {
+callPackage ./gerbil-builder.nix rec {
   version = "gerbil-unstable-2024-05-11";
   git-version = "0.18.1";
   src = fetchFromGitHub {

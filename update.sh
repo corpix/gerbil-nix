@@ -48,7 +48,7 @@ cat <<EOF
 , gambit-unstable, gambit-support
 , enableShared ? true
 }:
-callPackage ./build.nix rec {
+callPackage ./gerbil-builder.nix rec {
   version = "gerbil-$version";
   git-version = "$git_version";
   src = fetchFromGitHub {

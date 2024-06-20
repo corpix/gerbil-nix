@@ -32,8 +32,8 @@
             gerbil-git
           ;
         };
-        static = callPackage ./package.nix { enableShared = false; };
-        shared = callPackage ./package.nix { enableShared = true; };
+        static = callPackage ./gerbil.nix { enableShared = false; };
+        shared = callPackage ./gerbil.nix { enableShared = true; };
       in {
         packages.default = static;
         packages.static = static;

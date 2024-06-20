@@ -12,4 +12,4 @@ tag:
 
 .PHONY: update
 update:
-	./update.sh | tee package.nix
+	./update.sh | tee gerbil.nix
