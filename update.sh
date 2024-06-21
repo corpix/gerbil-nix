@@ -2,18 +2,20 @@
 set -e
 set -x
 
+dir=gerbil
+
 # gets optional git tag/commit as first argument (otherwise use current master)
-# prints out nix derivation code (not writing anything to existing files except local "cache" at .update-sh-gerbil/)
+# prints out nix derivation code (not writing anything to existing files except local "cache" at $dir/)
 
 version=$1
 
-if [ -d .update-sh-gerbil ]
+if [ -d $dir ]
 then
-    cd .update-sh-gerbil
+    cd $dir
     git pull -r origin master 1>&2
 else
-    git clone https://github.com/mighty-gerbils/gerbil .update-sh-gerbil 1>&2
-    cd .update-sh-gerbil
+    git clone https://github.com/mighty-gerbils/gerbil $dir 1>&2
+    cd $dir
 fi
 
 ##
