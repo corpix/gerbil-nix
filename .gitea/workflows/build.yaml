@@ -12,14 +12,15 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64-linux, aarch64-linux]
+        package: [gambit, gerbil]
         flavor: [static, shared]
     steps:
       - name: checkout
         uses: actions/checkout@v3
       - name: build
-        run: nix build --print-out-paths -L .#packages.${{ matrix.arch }}.${{ matrix.flavor }} > out-paths
+        run: nix build --print-out-paths -L .#packages.${{ matrix.arch }}.${{ matrix.package }}-${{ matrix.flavor }} > out-paths
       - name: update gcroot
         run: >-
-          gcroot=$(echo ${{ github.repository }} | sed 's/\//-/g').${{ matrix.arch }}.${{ matrix.flavor }};
+          gcroot=$(echo ${{ github.repository }} | sed 's/\//-/g').${{ matrix.arch }}.${{ matrix.package }}-${{ matrix.flavor }};
           rm -f /nix/var/nix/gcroots/per-user/$(whoami)/$gcroot || true;
           ln -s $(tail -n 1 out-paths) /nix/var/nix/gcroots/per-user/$(whoami)/$gcroot

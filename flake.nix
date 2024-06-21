@@ -22,32 +22,41 @@
           filter
         ;
 
-        packages = attrValues {
-          inherit (pkgs)
-            coreutils
-            gnumake
-            gnused
-            jq
-
-            gerbil-git
-          ;
-        };
-        static = callPackage ./gerbil.nix { enableShared = false; };
-        shared = callPackage ./gerbil.nix { enableShared = true; };
+        gambit-static = callPackage ./gambit.nix { enableShared = false; };
+        gambit-shared = callPackage ./gambit.nix { enableShared = true; };
+        gerbil-static = callPackage ./gerbil.nix { enableShared = false; };
+        gerbil-shared = callPackage ./gerbil.nix { enableShared = true; };
       in {
-        packages.default = static;
-        packages.static = static;
-        packages.shared = shared;
-        stdenv.default = callPackage ./stdenv.nix { gerbil = static; };
-        stdenv.static = callPackage ./stdenv.nix { gerbil = static; };
-        stdenv.shared = callPackage ./stdenv.nix { gerbil = shared; };
+        packages.default = gerbil-static;
+
+        packages.gambit-static = gambit-static;
+        packages.gambit-shared = gambit-shared;
+        packages.gerbil-static = gerbil-static;
+        packages.gerbil-shared = gerbil-shared;
+
+        stdenv.default = callPackage ./stdenv.nix { gerbil = gerbil-static; };
+        stdenv.static = callPackage ./stdenv.nix { gerbil = gerbil-static; };
+        stdenv.shared = callPackage ./stdenv.nix { gerbil = gerbil-shared; };
+
         devShells.default = pkgs.mkShell {
           name = "gerbil";
-          inherit packages;
+          packages = attrValues {
+            inherit (pkgs)
+              coreutils
+              gnumake
+              gnused
+              git
+              jq
+
+              gerbil-git
+              gambit-git
+            ;
+          };
         };
       };
     in (flake-utils.lib.eachDefaultSystem mkArch) // {
       overlays.default = _: prev: {
+        gambit-git = self.packages.${prev.stdenv.hostPlatform.system}.default;
         gerbil-git = self.packages.${prev.stdenv.hostPlatform.system}.default;
       };
     };

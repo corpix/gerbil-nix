@@ -1,10 +1,9 @@
-{ pkgs, stdenv, gccStdenv, callPackage, fetchFromGitHub
+{ pkgs, stdenv, callPackage, fetchFromGitHub
 , gambit-unstable, gambit-support
 , enableShared ? true
 }:
 callPackage ./gerbil-builder.nix rec {
-  version = "gerbil-unstable-2024-05-11";
-  git-version = "0.18.1";
+  version = "0.18.1";
   src = fetchFromGitHub {
     owner = "mighty-gerbils";
     repo = "gerbil";
@@ -12,9 +11,10 @@ callPackage ./gerbil-builder.nix rec {
     hash = "sha256-e1Lkudu8XTLyZl//othmY5D18nJxILaIJNaVOwv5MVc=";
     fetchSubmodules = true;
   };
-  inherit enableShared gambit-support;
-  gambit-params = gambit-support.unstable-params;
+  gerbil-git-version = "0.18.1-111-g708c85bd";
   gambit-git-version = "4.9.5-130-g09335d95";
-  gambit-stampYmd = "20240407";
-  gambit-stampHms = "75009";
+  gambit-stamp-ymd = "20240407";
+  gambit-stamp-hms = "75009";
+
+  inherit enableShared;
 }

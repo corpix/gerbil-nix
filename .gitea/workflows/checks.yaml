@@ -22,5 +22,5 @@ jobs:
         run: >-
           cd test;
           nix flake lock;
-          nix develop .#devShells.${{ matrix.arch }}.${{ matrix.flavor }} -L --command
+          nix develop .#devShells.${{ matrix.arch }}.gerbil-${{ matrix.flavor }} -L --command
           bash -xec "gxi -e '(import :mk-gerbil-package/hello)' -e '(displayln words)'"

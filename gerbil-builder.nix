@@ -1,7 +1,13 @@
 { pkgs, lib, gccStdenv, coreutils
 , openssl, zlib, sqlite
-, version, git-version, src, enableShared
-, gambit-support, gambit-git-version, gambit-stampYmd, gambit-stampHms, gambit-params
+, version, src
+, gerbil-git-version
+, gambit-support
+, gambit-git-version
+, gambit-stamp-ymd
+, gambit-stamp-hms
+, gambit-gambopt ? ["i8" "f8" "-8" "t8"]
+  , enableShared
 }:
 
 let
@@ -27,10 +33,10 @@ in stdenv.mkDerivation rec {
       substituteInPlace "$f" --replace '#!/usr/bin/env' '#!${coreutils}/bin/env'
     done
     cat > MANIFEST <<EOF
-    gerbil_stamp_version=v${git-version}
+    gerbil_stamp_version=v${gerbil-git-version}
     gambit_stamp_version=v${gambit-git-version}
-    gambit_stamp_ymd=${gambit-stampYmd}
-    gambit_stamp_hms=${gambit-stampHms}
+    gambit_stamp_ymd=${gambit-stamp-ymd}
+    gambit_stamp_hms=${gambit-stamp-hms}
     EOF
 
     export GERBIL_GCC=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}gcc
@@ -72,7 +78,7 @@ in stdenv.mkDerivation rec {
     export GERBIL_PREFIX=$PWD
     export GERBIL_PATH=$PWD/lib
     export PATH=$PWD/bin:$PATH
-    ${gambit-support.export-gambopt gambit-params}
+    export GAMBOPT="${concatStringsSep "," gambit-gambopt}"
 
     # Build, replacing make by build.sh
     ( cd src && ./build.sh )
