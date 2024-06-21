@@ -4,7 +4,6 @@
 , gambit-support, gambit-git-version, gambit-stampYmd, gambit-stampHms, gambit-params
 }:
 
-# We use Gambit, that works 10x better with GCC than Clang. See ../gambit/build.nix
 let
   stdenv = gccStdenv;
 
@@ -19,13 +18,7 @@ in stdenv.mkDerivation rec {
   inherit version;
   inherit src;
 
-  buildInputs_libraries = [ openssl zlib sqlite ];
-
-  # TODO: either fix all of Gerbil's dependencies to provide static libraries,
-  # or give up and delete all tentative support for static libraries.
-  #buildInputs_staticLibraries = map makeStaticLibraries buildInputs_libraries;
-
-  buildInputs = buildInputs_libraries;
+  buildInputs = [ openssl zlib sqlite ];
 
   postPatch = ''
     patchShebangs .
@@ -42,17 +35,6 @@ in stdenv.mkDerivation rec {
 
     export GERBIL_GCC=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}gcc
   '';
-
-## TODO: make static compilation work.
-## For that, get all the packages below to somehow expose static libraries,
-## so we can offer users the option to statically link them into Gambit and/or Gerbil.
-## Then add the following to the postPatch script above:
-#     cat > etc/gerbil_static_libraries.sh <<EOF
-# OPENSSL_LIBCRYPTO=${makeStaticLibraries openssl}/lib/libcrypto.a # MISSING!
-# OPENSSL_LIBSSL=${makeStaticLibraries openssl}/lib/libssl.a # MISSING!
-# ZLIB=${makeStaticLibraries zlib}/lib/libz.a
-# SQLITE=${makeStaticLibraries sqlite}/lib/sqlite.a # MISSING!
-# EOF
 
   configureFlags = [
     "--prefix=$out/gerbil"
@@ -93,7 +75,7 @@ in stdenv.mkDerivation rec {
     ${gambit-support.export-gambopt gambit-params}
 
     # Build, replacing make by build.sh
-    ( cd src && sh build.sh )
+    ( cd src && ./build.sh )
 
   '' + (optionalString enableShared ''
     substituteInPlace build/lib/libgerbil.ldd \
@@ -115,9 +97,9 @@ in stdenv.mkDerivation rec {
 
   meta = {
     description = "Gerbil Scheme";
-    homepage    = "https://github.com/vyzo/gerbil";
-    license     = licenses.lgpl21Only;
-    platforms   = platforms.unix;
+    homepage = "https://github.com/vyzo/gerbil";
+    license = licenses.lgpl21Only;
+    platforms = platforms.unix;
   };
 
   outputsToInstall = [ "out" ];
