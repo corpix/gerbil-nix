@@ -24,11 +24,12 @@
           name = "gerbil";
           packages = [
             (mkGerbilPackageTest flavor)
-            gerbil.packages.${arch}.${flavor}
+            gerbil.packages.${arch}."gerbil-${flavor}"
           ];
         };
       in {
         packages.mkGerbilPackageTestStatic = mkGerbilPackageTest "static";
-        devShells.static = mkShell "static";
+        devShells.gerbil-static = mkShell "static";
+        devShells.gerbil-shared = mkShell "shared";
       });
 }

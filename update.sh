@@ -66,29 +66,6 @@ echo >&2
 
 cd $root
 
-cat <<EOF > gerbil.nix
-{ pkgs, stdenv, callPackage, $gerbil_fetch_helper
-, gambit-unstable, gambit-support
-, enableShared ? true
-}:
-callPackage ./gerbil-builder.nix rec {
-  version = "$gerbil_version";
-  src = $gerbil_fetch_helper {
-    owner = "$gerbil_fetch_owner";
-    repo = "$gerbil_fetch_repo";
-    rev = "$gerbil_rev";
-    hash = "$gerbil_sha256sri";
-    fetchSubmodules = true;
-  };
-  gerbil-git-version = "$gerbil_git_version";
-  gambit-git-version = "$gambit_git_version";
-  gambit-stamp-ymd = "$gambit_stamp_ymd";
-  gambit-stamp-hms = "$gambit_stamp_hms";
-
-  inherit enableShared;
-}
-EOF
-
 cat <<EOF > gambit.nix
 { pkgs, stdenv, callPackage, $gambit_fetch_helper
 , enableShared ? true
@@ -107,5 +84,25 @@ callPackage ./gambit-builder.nix rec {
   gambit-stamp-hms = "$gambit_stamp_hms";
 
   inherit enableShared;
+}
+EOF
+
+cat <<EOF > gerbil.nix
+{ pkgs, stdenv, callPackage, $gerbil_fetch_helper
+, gambit-git
+, enableShared ? true
+}:
+callPackage ./gerbil-builder.nix rec {
+  version = "$gerbil_version";
+  src = $gerbil_fetch_helper {
+    owner = "$gerbil_fetch_owner";
+    repo = "$gerbil_fetch_repo";
+    rev = "$gerbil_rev";
+    hash = "$gerbil_sha256sri";
+    fetchSubmodules = true;
+  };
+  gerbil-git-version = "$gerbil_git_version";
+
+  inherit gambit-git enableShared;
 }
 EOF

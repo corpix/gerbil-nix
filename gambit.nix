@@ -1,4 +1,6 @@
 { pkgs, stdenv, callPackage, fetchFromGitHub
+, openssl
+, enableOpenssl ? true
 , enableShared ? true
 }:
 callPackage ./gambit-builder.nix rec {
@@ -14,5 +16,5 @@ callPackage ./gambit-builder.nix rec {
   gambit-stamp-ymd = "20240407";
   gambit-stamp-hms = "75009";
 
-  inherit enableShared;
+  inherit openssl enableOpenssl enableShared;
 }

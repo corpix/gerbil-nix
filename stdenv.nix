@@ -1,4 +1,4 @@
-{ stdenv, writeText, gerbil, ... }: let
+{ stdenv, writeText, pkg-config, gerbil, ... }: let
   inherit (builtins)
     removeAttrs
   ;
@@ -18,8 +18,9 @@ in {
           addToSearchPathWithCustomDelimiter : GERBIL_LOADPATH "$1/gerbil/lib"
         }
 
-        addEnvHooks "$targetOffset" addGerbilRepositoryPath
+        addEnvHooks "$hostOffset" addGerbilRepositoryPath
       '';
+      nativeBuildInputs = [ pkg-config ];
       propagatedBuildInputs = [ gerbil ] ++ propagatedBuildInputs;
 
       configurePhase = ''

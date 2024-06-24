@@ -1,5 +1,5 @@
 { pkgs, stdenv, callPackage, fetchFromGitHub
-, gambit-unstable, gambit-support
+, gambit-git, zlib, openssl, sqlite
 , enableShared ? true
 }:
 callPackage ./gerbil-builder.nix rec {
@@ -12,9 +12,6 @@ callPackage ./gerbil-builder.nix rec {
     fetchSubmodules = true;
   };
   gerbil-git-version = "0.18.1-111-g708c85bd";
-  gambit-git-version = "4.9.5-130-g09335d95";
-  gambit-stamp-ymd = "20240407";
-  gambit-stamp-hms = "75009";
 
-  inherit enableShared;
+  inherit gambit-git zlib openssl sqlite enableShared;
 }

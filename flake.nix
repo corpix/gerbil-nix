@@ -22,10 +22,27 @@
           filter
         ;
 
-        gambit-static = callPackage ./gambit.nix { enableShared = false; };
+        gambit-static = callPackage ./gambit.nix {
+          enableShared = false;
+          enableOpenssl = false;
+        };
         gambit-shared = callPackage ./gambit.nix { enableShared = true; };
-        gerbil-static = callPackage ./gerbil.nix { enableShared = false; };
-        gerbil-shared = callPackage ./gerbil.nix { enableShared = true; };
+        gerbil-static = callPackage ./gerbil.nix {
+          enableShared = false;
+          gambit-git = gambit-static;
+          zlib = pkgs.zlib.override { shared = false; static = true; };
+          openssl = pkgs.openssl.override { static = true; };
+          sqlite = pkgs.sqlite.overrideAttrs (super: {
+            configureFlags = super.configureFlags ++ [
+              "--enable-static"
+              "--disable-shared"
+            ];
+          });
+        };
+        gerbil-shared = callPackage ./gerbil.nix {
+          enableShared = true;
+          gambit-git = gambit-shared;
+        };
       in {
         packages.default = gerbil-static;
 
@@ -48,16 +65,21 @@
               git
               jq
 
+              zlib
+              openssl
+              sqlite
+
               gerbil-git
               gambit-git
             ;
           };
+          shellHook = ''
+            export NIX_BUILD_CORES=3
+            export NIX_PATH=nixpkgs-overlays=$(pwd)/overlay:$NIX_PATH
+          '';
         };
       };
     in (flake-utils.lib.eachDefaultSystem mkArch) // {
-      overlays.default = _: prev: {
-        gambit-git = self.packages.${prev.stdenv.hostPlatform.system}.default;
-        gerbil-git = self.packages.${prev.stdenv.hostPlatform.system}.default;
-      };
+      overlays.default = import ./overlay;
     };
 }

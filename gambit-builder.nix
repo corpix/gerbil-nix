@@ -7,6 +7,7 @@
 , gambit-targets
 , gambit-c-opt ? "-O1", gambit-c-opt-rts ? "-O2"
 , gambit-default-runtime-options ? ["iL" "fL" "-L" "tL"]
+, enableOpenssl
 , enableShared
 }: let
   inherit (builtins)
@@ -32,10 +33,12 @@
     buildInputs = [ autoconf ];
 
     configurePhase = ''
-      export CC=${gcc}/bin/gcc CXX=${gcc}/bin/g++ \
-             CPP=${gcc}/bin/cpp CXXCPP=${gcc}/bin/cpp LD=${gcc}/bin/ld \
+      export CC=${gcc}/bin/gcc \
+             CXX=${gcc}/bin/g++ \
+             CPP=${gcc}/bin/cpp \
+             CXXCPP=${gcc}/bin/cpp \
+             LD=${gcc}/bin/ld \
              XMKMF=${coreutils}/bin/false
-      unset CFLAGS LDFLAGS LIBS CPPFLAGS CXXFLAGS
       ./configure --prefix=$out/gambit
     '';
 
@@ -55,8 +58,11 @@ in gccStdenv.mkDerivation rec {
   pname = "gambit";
   inherit src version bootstrap;
 
-  nativeBuildInputs = [ git autoconf ];
-  buildInputs = [ openssl ];
+  nativeBuildInputs = [git autoconf];
+  buildInputs = [openssl];
+
+  patches = [./patch/0000-gambit-output-prefix.patch];
+  patchFlags = ["-p0"];
 
   configureFlags = [
     "--enable-targets=${concatStringsSep "," gambit-targets}"
@@ -65,15 +71,15 @@ in gccStdenv.mkDerivation rec {
     "--enable-c-opt-rts=${gambit-c-opt-rts}"
     "--enable-gcc-opts"
     "--enable-trust-c-tco"
-    "--enable-openssl"
     "--enable-absolute-shared-libs"
     "--enable-default-runtime-options=${concatStringsSep "," gambit-default-runtime-options}"
     # fixme: https://git.tatikoma.dev/corpix/gerbil-nix/issues/4#issuecomment-473
     # "--enable-multiple-vms"
     # "--enable-multiple-threaded-vms"
+    # # fixme: segfaults in case profile and/or coverage enabled
     # "--enable-profile"
     # "--enable-coverage"
-    # fixme: clean up this mess
+    # # fixme: clean up this mess
     # "--enable-default-compile-options='(compactness 9)'" # Make life easier on the JS backend
     # "--enable-rtlib-debug" # used by Geiser, but only on recent-enough gambit, and messes js runtime
     # "--enable-debug" # Nope: enables plenty of good stuff, but also the costly console.log
@@ -88,6 +94,9 @@ in gccStdenv.mkDerivation rec {
     # "--enable-march=native" # Nope, makes it not work on machines older than the builder
     # "--enable-inline-jumps"
   ]
+  ++ optionals (enableOpenssl) [
+    "--enable-openssl"
+  ]
   ++ optionals (enableShared) [
     "--enable-shared"
     "--enable-dynamic-clib"
@@ -95,22 +104,21 @@ in gccStdenv.mkDerivation rec {
   # Do not enable poll on darwin due to https://github.com/gambit/gambit/issues/498
   ++ optional (!gccStdenv.isDarwin) "--enable-poll";
 
-  configurePhase = ''
-    export CC=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}gcc \
-           CXX=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}g++ \
-           CPP=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}cpp \
-           CXXCPP=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}cpp \
-           LD=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}ld \
-           XMKMF=${coreutils}/bin/false
-    unset CFLAGS LDFLAGS LIBS CPPFLAGS CXXFLAGS
+  configurePhase = let
+    opensslPathFix = ''
+      substituteInPlace config.status \
+        ${optionalString (gccStdenv.isDarwin) ''--replace-fail "/usr/local/opt/openssl@1.1" "${getLib openssl}"''} \
+        --replace-fail "/usr/local/opt/openssl" "${getLib openssl}"
+    '';
+  in ''
+    env
 
-    echo "Fixing timestamp recipe in Makefile"
     substituteInPlace configure \
-      --replace "$(grep '^PACKAGE_VERSION=.*$' configure)" 'PACKAGE_VERSION="v${gambit-git-version}"' \
-      --replace "$(grep '^PACKAGE_STRING=.*$' configure)" 'PACKAGE_STRING="Gambit v${gambit-git-version}"' ;
+      --replace-fail "$(grep '^PACKAGE_VERSION=.*$' configure)" 'PACKAGE_VERSION="v${gambit-git-version}"' \
+      --replace-fail "$(grep '^PACKAGE_STRING=.*$' configure)" 'PACKAGE_STRING="Gambit v${gambit-git-version}"' ;
     substituteInPlace include/makefile.in \
-      --replace "\$\$(\$(GIT) describe --tag --always | sed 's/-bootstrap\$\$//')" "v${gambit-git-version}" \
-      --replace "echo > stamp.h;" "(${
+      --replace-fail '$(GIT) describe --tag --always' 'echo "v${gambit-git-version}"' \
+      --replace-fail 'echo > stamp.h;' "(${
         concatStringsSep " " [
           ''echo '#define ___STAMP_VERSION \"v${gambit-git-version}\"';''
           ''echo '#define ___STAMP_YMD ${toString gambit-stamp-ymd}';''
@@ -120,16 +128,12 @@ in gccStdenv.mkDerivation rec {
 
     ./configure --prefix=$out/gambit ${concatStringsSep " " configureFlags}
 
-    substituteInPlace config.status \
-      ${optionalString (gccStdenv.isDarwin) ''--replace "/usr/local/opt/openssl@1.1" "${getLib openssl}"''} \
-      --replace "/usr/local/opt/openssl" "${getLib openssl}"
+    ${optionalString enableOpenssl opensslPathFix}
 
     ./config.status
   '';
 
   buildPhase = ''
-    # The MAKEFLAGS setting is a workaround for https://github.com/gambit/gambit/issues/833
-    export MAKEFLAGS="--output-sync=recurse"
     echo "Make bootstrap compiler, from release bootstrap"
     mkdir -p boot
     cp -rp ${bootstrap}/gambit/. boot/.
@@ -148,14 +152,24 @@ in gccStdenv.mkDerivation rec {
     cp boot/gsc/gsc gsc-boot
 
     echo "Use bootstrap compiler to build Gambit"
+    set -x
     make -j$NIX_BUILD_CORES from-scratch
     make -j$NIX_BUILD_CORES modules
+    set +x
   '';
 
   postInstall = ''
-    mkdir $out/bin
+    mkdir -p $out/bin
     cd $out/bin
-    ln -s ../gambit/bin/* .
+    ln -s $out/gambit/bin/* .
+    cd -
+    mkdir -p $out/lib
+    mv $out/gambit/lib/libgambit* $out/lib
+    cd $out/gambit/lib
+    ln -s $out/lib/libgambit* .
+    cd -
+    mv $out/gambit/include $out/include
+    ln -s $out/include $out/gambit/include
   '';
 
   doCheck = true;

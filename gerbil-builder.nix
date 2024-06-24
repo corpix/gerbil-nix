@@ -1,21 +1,21 @@
 { pkgs, lib, gccStdenv, coreutils
-, openssl, zlib, sqlite
+, openssl, zlib, sqlite, pkg-config
 , version, src
+, gambit-git
 , gerbil-git-version
-, gambit-support
-, gambit-git-version
-, gambit-stamp-ymd
-, gambit-stamp-hms
-, gambit-gambopt ? ["i8" "f8" "-8" "t8"]
-  , enableShared
+, enableShared
 }:
 
 let
   stdenv = gccStdenv;
 
+  inherit (pkgs)
+    writeText
+  ;
   inherit (lib)
     optionalString
     concatStringsSep
+    getLib
     licenses
     platforms
   ;
@@ -24,22 +24,40 @@ in stdenv.mkDerivation rec {
   inherit version;
   inherit src;
 
-  buildInputs = [ openssl zlib sqlite ];
+  nativeBuildInputs = [pkg-config];
+  buildInputs = [
+    gambit-git
+    zlib
+    openssl
+    sqlite
+  ];
+
+  setupHook = writeText "setup-hook.sh" ''
+    addGerbilHome() {
+      export GERBIL_HOME="@out@/gerbil"
+    }
+
+    addEnvHooks "$hostOffset" addGerbilHome
+  '';
+
+  patches = [
+    ./patch/0000-gambit-output-prefix-gerbil.patch
+    ./patch/0001-gerbil-gambit-pkg.patch
+  ];
+  patchFlags = ["-p0"];
 
   postPatch = ''
     patchShebangs .
     grep -Fl '#!/usr/bin/env' `find . -type f -executable` | while read f
     do
-      substituteInPlace "$f" --replace '#!/usr/bin/env' '#!${coreutils}/bin/env'
+      substituteInPlace "$f" --replace-fail '#!/usr/bin/env' '#!${coreutils}/bin/env'
     done
     cat > MANIFEST <<EOF
     gerbil_stamp_version=v${gerbil-git-version}
-    gambit_stamp_version=v${gambit-git-version}
-    gambit_stamp_ymd=${gambit-stamp-ymd}
-    gambit_stamp_hms=${gambit-stamp-hms}
     EOF
 
-    export GERBIL_GCC=${gccStdenv.cc}/bin/${gccStdenv.cc.targetPrefix}gcc
+    # ~~ will point to Gambit, while we need "actual" Gerbil home dir
+    substituteInPlace "src/gerbil/runtime/system.ss" --replace-fail '(path-expand "~~")' "\"$out/gerbil\""
   '';
 
   configureFlags = [
@@ -51,26 +69,21 @@ in stdenv.mkDerivation rec {
   ];
 
   configurePhase = ''
-    export CC=${stdenv.cc}/bin/${stdenv.cc.targetPrefix}gcc \
-           CXX=${stdenv.cc}/bin/${stdenv.cc.targetPrefix}g++ \
-           CPP=${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cpp \
-           CXXCPP=${stdenv.cc}/bin/${stdenv.cc.targetPrefix}cpp \
-           LD=${stdenv.cc}/bin/${stdenv.cc.targetPrefix}ld \
-           XMKMF=${coreutils}/bin/false
-    unset CFLAGS LDFLAGS LIBS CPPFLAGS CXXFLAGS
-    ./configure ${builtins.concatStringsSep " " configureFlags}
+    export GAMBIT_PKG=${gambit-git}
+    env
+    ./configure ${concatStringsSep " " configureFlags}
   '';
 
-  extraLdOptions = [
-      "-L${zlib}/lib"
-      "-L${openssl.out}/lib"
-      "-L${sqlite.out}/lib"
-    ];
+  extraLdOptions = map (input: "-L${getLib input}/lib") buildInputs;
 
-  buildPhase = ''
+  buildPhase = let
+    libGerbilLddFix = ''
+      substituteInPlace build/lib/libgerbil.ldd \
+        --replace-fail '(' '(${concatStringsSep " " (map (x: ''"${x}"'' ) extraLdOptions)}'
+    '';
+  in ''
     runHook preBuild
 
-    # gxprof testing uses $HOME/.cache/gerbil/gxc
     export HOME=$PWD
     export GERBIL_BUILD_CORES=$NIX_BUILD_CORES
     export GERBIL_GXC=$PWD/bin/gxc
@@ -78,15 +91,20 @@ in stdenv.mkDerivation rec {
     export GERBIL_PREFIX=$PWD
     export GERBIL_PATH=$PWD/lib
     export PATH=$PWD/bin:$PATH
-    export GAMBOPT="${concatStringsSep "," gambit-gambopt}"
 
-    # Build, replacing make by build.sh
+    if [ ! -d $GERBIL_BASE/build/bin ]
+    then
+      mkdir -p $GERBIL_BASE/build/bin
+    fi
+    for bin in ${gambit-git}/bin/*
+    do
+      ln -s $(readlink -f $bin) $GERBIL_BASE/build/bin/$(basename $bin)
+    done
+
     ( cd src && ./build.sh )
 
-  '' + (optionalString enableShared ''
-    substituteInPlace build/lib/libgerbil.ldd \
-      --replace '(' '(${concatStringsSep " " (map (x: ''"${x}"'' ) extraLdOptions)}'
-  '') + ''
+    ${optionalString enableShared libGerbilLddFix}
+
     runHook postBuild
   '';
 
@@ -101,13 +119,12 @@ in stdenv.mkDerivation rec {
     install_name_tool -id "$libgerbil" "$libgerbil"
   '';
 
+  dontStrip = true;
+
   meta = {
     description = "Gerbil Scheme";
     homepage = "https://github.com/vyzo/gerbil";
     license = licenses.lgpl21Only;
     platforms = platforms.unix;
   };
-
-  outputsToInstall = [ "out" ];
-  dontStrip = true;
 }
