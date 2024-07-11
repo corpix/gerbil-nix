@@ -2,7 +2,7 @@ name: build
 on:
   pull_request:
   push:
-    branches: master
+    tags: ["v*"]
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: false
@@ -11,9 +11,7 @@ jobs:
     runs-on: nix
     strategy:
       matrix:
-        # arch: [x86_64-linux, aarch64-linux]
-        arch: [x86_64-linux]
-        # package: [gambit, gerbil]
+        arch: [x86_64-linux, aarch64-linux]
         package: [gerbil]
         flavor: [static, shared]
     steps:
