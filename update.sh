@@ -68,6 +68,8 @@ cd $root
 
 cat <<EOF > gambit.nix
 { pkgs, stdenv, callPackage, $gambit_fetch_helper
+, openssl
+, enableOpenssl ? true
 , enableShared ? true
 }:
 callPackage ./gambit-builder.nix rec {
@@ -83,13 +85,13 @@ callPackage ./gambit-builder.nix rec {
   gambit-stamp-ymd = "$gambit_stamp_ymd";
   gambit-stamp-hms = "$gambit_stamp_hms";
 
-  inherit enableShared;
+  inherit openssl enableOpenssl enableShared;
 }
 EOF
 
 cat <<EOF > gerbil.nix
 { pkgs, stdenv, callPackage, $gerbil_fetch_helper
-, gambit-git
+, gambit-git, zlib, openssl, sqlite
 , enableShared ? true
 }:
 callPackage ./gerbil-builder.nix rec {
@@ -103,6 +105,6 @@ callPackage ./gerbil-builder.nix rec {
   };
   gerbil-git-version = "$gerbil_git_version";
 
-  inherit gambit-git enableShared;
+  inherit gambit-git zlib openssl sqlite enableShared;
 }
 EOF
