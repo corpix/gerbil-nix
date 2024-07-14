@@ -30,3 +30,9 @@ jobs:
           nix flake lock;
           nix develop .#devShells.${{ matrix.arch }}.gerbil-${{ matrix.flavor }} -L --command
           bash -xec "gxi -e '(import :std/net/request)'"
+      - name: test-sqlite
+        run: >-
+          cd test;
+          nix flake lock;
+          nix develop .#devShells.${{ matrix.arch }}.gerbil-${{ matrix.flavor }} -L --command
+          bash -xec "gxi -e '(import :std/db/dbi :std/db/sqlite)' -e '(sql-connect sqlite-open \":memory:\")'"
