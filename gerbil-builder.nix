@@ -26,10 +26,10 @@ in stdenv.mkDerivation rec {
 
   nativeBuildInputs = [pkg-config];
   buildInputs = [
-    gambit-git
     zlib
     openssl
     sqlite
+    gambit-git
   ];
 
   setupHook = writeText "setup-hook.sh" ''
@@ -43,6 +43,7 @@ in stdenv.mkDerivation rec {
   patches = [
     ./patch/0000-gambit-output-prefix-gerbil.patch
     ./patch/0001-gerbil-gambit-pkg.patch
+    ./patch/0001-gerbil-static-openssl-fix.patch
   ];
   patchFlags = ["-p0"];
 

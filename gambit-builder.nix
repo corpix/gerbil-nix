@@ -7,7 +7,6 @@
 , gambit-targets
 , gambit-c-opt ? "-O1", gambit-c-opt-rts ? "-O2"
 , gambit-default-runtime-options ? ["iL" "fL" "-L" "tL"]
-, enableOpenssl
 , enableShared
 }: let
   inherit (builtins)
@@ -15,6 +14,7 @@
   ;
   inherit (lib)
     concatStringsSep
+    concatMapStringsSep
     optionalString
     optional
     optionals
@@ -93,9 +93,10 @@ in gccStdenv.mkDerivation rec {
     # "--enable-char-size=1" # default is 4
     # "--enable-march=native" # Nope, makes it not work on machines older than the builder
     # "--enable-inline-jumps"
-  ]
-  ++ optionals (enableOpenssl) [
     "--enable-openssl"
+  ]
+  ++ optionals (gccStdenv.isDarwin && enableShared == false) [
+    "ENABLE_OPENSSL_STATIC_LINK=yes"
   ]
   ++ optionals (enableShared) [
     "--enable-shared"
@@ -104,18 +105,13 @@ in gccStdenv.mkDerivation rec {
   # Do not enable poll on darwin due to https://github.com/gambit/gambit/issues/498
   ++ optional (!gccStdenv.isDarwin) "--enable-poll";
 
-  configurePhase = let
-    opensslPathFix = ''
-      substituteInPlace config.status \
-        ${optionalString (gccStdenv.isDarwin) ''--replace-fail "/usr/local/opt/openssl@1.1" "${getLib openssl}"''} \
-        --replace-fail "/usr/local/opt/openssl" "${getLib openssl}"
-    '';
-  in ''
+  configurePhase = ''
     env
 
     substituteInPlace configure \
       --replace-fail "$(grep '^PACKAGE_VERSION=.*$' configure)" 'PACKAGE_VERSION="v${gambit-git-version}"' \
-      --replace-fail "$(grep '^PACKAGE_STRING=.*$' configure)" 'PACKAGE_STRING="Gambit v${gambit-git-version}"' ;
+      --replace-fail "$(grep '^PACKAGE_STRING=.*$' configure)" 'PACKAGE_STRING="Gambit v${gambit-git-version}"'
+
     substituteInPlace include/makefile.in \
       --replace-fail '$(GIT) describe --tag --always' 'echo "v${gambit-git-version}"' \
       --replace-fail 'echo > stamp.h;' "(${
@@ -124,12 +120,19 @@ in gccStdenv.mkDerivation rec {
           ''echo '#define ___STAMP_YMD ${toString gambit-stamp-ymd}';''
           ''echo '#define ___STAMP_HMS ${toString gambit-stamp-hms}';''
         ]
-      }) > stamp.h;";
+      }) > stamp.h;"
 
     ./configure --prefix=$out/gambit ${concatStringsSep " " configureFlags}
-
-    ${optionalString enableOpenssl opensslPathFix}
-
+    ${optionalString (gccStdenv.isDarwin)
+      ''substituteInPlace config.status --replace-fail "/usr/local/opt/openssl@1.1" "${getLib openssl}"''}
+    ${optionalString (enableShared)
+      ''substituteInPlace config.status --replace-fail "/usr/local/opt/openssl" "${getLib openssl}"''}
+    ${let
+      libs = concatMapStringsSep " "
+        (lib: "${getLib openssl}/lib/${lib}.a")
+        ["libssl" "libcrypto"];
+    in optionalString (enableShared == false)
+      ''substituteInPlace config.status --replace-fail '-L/usr/local/opt/openssl/lib -lssl -lcrypto' "${libs}"''}
     ./config.status
   '';
 

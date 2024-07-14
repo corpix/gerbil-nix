@@ -23,8 +23,8 @@
         ;
 
         gambit-static = callPackage ./gambit.nix {
+          openssl = pkgs.openssl.override { static = true; };
           enableShared = false;
-          enableOpenssl = false;
         };
         gambit-shared = callPackage ./gambit.nix { enableShared = true; };
         gerbil-static = callPackage ./gerbil.nix {
