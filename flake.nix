@@ -79,7 +79,7 @@
           '';
         };
       };
-    in (flake-utils.lib.eachDefaultSystem mkArch) // {
+    in ((flake-utils.lib.eachSystem flake-utils.lib.allSystems) mkArch) // {
       overlays.default = import ./overlay;
     };
 }

@@ -11,7 +11,7 @@ jobs:
     runs-on: nix
     strategy:
       matrix:
-        arch: [x86_64-linux, aarch64-linux]
+        arch: [x86_64-linux, aarch64-linux, armv7l-linux]
         package: [gerbil]
         flavor: [static, shared]
     steps:
