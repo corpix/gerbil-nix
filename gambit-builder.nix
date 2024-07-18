@@ -61,8 +61,8 @@ in gccStdenv.mkDerivation rec {
   nativeBuildInputs = [git autoconf];
   buildInputs = [openssl];
 
-  patches = [./patch/0000-gambit-output-prefix.patch];
-  patchFlags = ["-p0"];
+  #patches = [./patch/0000-gambit-output-prefix.patch];
+  #patchFlags = ["-p0"];
 
   configureFlags = [
     "--enable-targets=${concatStringsSep "," gambit-targets}"
