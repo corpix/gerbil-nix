@@ -1,5 +1,11 @@
+commit 4cc9b2bf220e052495b98a264adc7053f9349c74
+Author: Dmitry Moskowski <me@corpix.ru>
+Date:   Thu Jul 18 18:35:27 2024 +0000
+
+    draft implementation of compilation prefix directory support
+
 diff --git gsc/_gsclib.scm gsc/_gsclib.scm
-index abef1dc0..a10c4a3f 100644
+index abef1dc0..4f1faacf 100644
 --- gsc/_gsclib.scm
 +++ gsc/_gsclib.scm
 @@ -85,6 +85,32 @@
@@ -59,3 +65,23 @@ index abef1dc0..a10c4a3f 100644
                    (mod-ref
                     (or module-ref
                         (##string->symbol
+@@ -297,13 +324,15 @@
+     (define (generate-output-filename root input-is-target-file?)
+       (case type
+         ((obj)
+-         (##string-append
+-          root
+-          ##os-obj-extension-string-saved))
++         (##compile-output-dir
++          (##string-append
++           root
++           ##os-obj-extension-string-saved)))
+         (else
+          (if input-is-target-file?
+              root
+-             (generate-next-version-of-object-file root)))))
++             (##compile-output-dir
++              (generate-next-version-of-object-file root))))))
+ 
+     (let* ((filename
+             (if (##source? filename-or-source)
