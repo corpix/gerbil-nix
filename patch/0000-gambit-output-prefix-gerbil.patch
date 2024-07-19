@@ -1,5 +1,5 @@
 diff --git src/gerbil/compiler/driver.ss src/gerbil/compiler/driver.ss
-index 3613a153..4474563b 100644
+index 3613a153..23415c81 100644
 --- src/gerbil/compiler/driver.ss
 +++ src/gerbil/compiler/driver.ss
 @@ -81,11 +81,25 @@ namespace: gxc
@@ -205,3 +205,21 @@ index 3613a153..4474563b 100644
  
  (def (find-export-binding ctx id)
    (cond
+@@ -933,9 +953,15 @@ namespace: gxc
+              stdout-redirection: (stdout-redirection #f)
+              stderr-redirection: (stderr-redirection #f))
+   (verbose "invoke " [program . args])
+-  (let* ((proc (open-process [path: program arguments: args
++  (let* ((output-dir (current-compile-output-dir))
++         (env (and output-dir
++                   [(##os-environ) ...
++                    (string-append "GAMBIT_OUTPUT_PREFIX="
++                                   output-dir)]))
++         (proc (open-process [path: program arguments: args
+                                     stdout-redirection: stdout-redirection
+-                                    stderr-redirection: stderr-redirection]))
++                                    stderr-redirection: stderr-redirection
++                                    environment: env]))
+          (output (and (or stdout-redirection stderr-redirection)
+                       (read-line proc #f))))
+     (let (status (process-status proc))
