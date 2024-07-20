@@ -1,19 +1,38 @@
 diff --git src/build/build-bach.ss src/build/build-bach.ss
-index 18ac42a7..57335652 100644
+index 18ac42a7..bdefbd0a 100644
 --- src/build/build-bach.ss
 +++ src/build/build-bach.ss
-@@ -31,6 +31,9 @@
-  (else
-   (def default-ld-options ["-ldl" "-lm"])))
- 
-+(when (member "--enable-openssl" (string-split (configure-command-string) #\'))
-+  (set! default-ld-options (append default-ld-options ["-lssl" "-lcrypto"])))
-+
- (def builtin-modules
-   '(;; :gerbil/runtime
-     "gerbil/runtime/gambit"
+@@ -125,13 +125,15 @@
+           ["-e" include-gambit-sharp]))
+        (output-bin
+         (path-expand "gerbil" gerbil-bindir))
+-       (gerbil-shared?
+-        (member "--enable-shared" (string-split (configure-command-string) #\')))
++       (configure-flags (string-split (configure-command-string) #\'))
++       (gerbil-shared? (member "--enable-shared" configure-flags))
++       (enable-openssl? (member "--enable-openssl" configure-flags))
+        (rpath-options
+         (if gerbil-shared?
+           [(string-append (cond-expand (darwin "-Wl,-rpath,") (else "-Wl,-rpath="))
+ 		                  gambit-libdir)]
+-          [])))
++          []))
++       (extra-ld-options (if enable-openssl? ["-lssl" "-lcrypto"] [])))
+   (displayln "... link " output-bin)
+   (invoke (gerbil-gsc)
+           ["-link" "-o" bach-link-c
+@@ -153,7 +155,8 @@
+            bach-main-o
+            bach-link-o
+            "-L" gerbil-libdir "-lgambit"
+-           default-ld-options ...])
++           default-ld-options ...
++           extra-ld-options ...])
+   ;; clean up
+   (delete-file bach-main-scm)
+   (delete-file bach-link-c)
 diff --git src/std/build-spec.ss src/std/build-spec.ss
-index c2cd1ada..ebebca19 100644
+index c2cd1ada..c159d3ca 100644
 --- src/std/build-spec.ss
 +++ src/std/build-spec.ss
 @@ -208,18 +208,14 @@
@@ -23,23 +42,17 @@ index c2cd1ada..ebebca19 100644
 -    ,(cond-expand
 -      (darwin
 -       `(gxc: "net/ssl/libssl"
--	      "-cc-options" ,(cppflags "libssl" "")
--	      "-ld-options" ,(apply append-options
--			               (ldflags "libssl" "-lssl")
--			               (ldflags "libcrypto" "-lcrypto")
--                           (if (enable-shared?)
--                             [(string-append "-L" (gerbil-libdir)) "-lgambit"]
++    (gxc: "net/ssl/libssl"
+ 	      "-cc-options" ,(cppflags "libssl" "")
+ 	      "-ld-options" ,(apply append-options
+ 			               (ldflags "libssl" "-lssl")
+ 			               (ldflags "libcrypto" "-lcrypto")
+                            (if (enable-shared?)
+                              [(string-append "-L" (gerbil-libdir)) "-lgambit"]
 -                             []))))
 -      (else `(gxc: "net/ssl/libssl"
 -		   "-ld-options" ,(ldflags "libssl" "-lssl"))))
-+    ,`(gxc: "net/ssl/libssl"
-+            "-cc-options" ,(cppflags "libssl" "")
-+		    "-ld-options" ,(apply append-options
-+			                 (ldflags "libssl" "-lssl")
-+			                 (ldflags "libcrypto" "-lcrypto")
-+                             (if (enable-shared?)
-+                               [(string-append "-L" (gerbil-libdir)) "-lgambit"]
-+                               [])))
++                             [])))
      "net/ssl/error"
      "net/ssl/interface"
      "net/ssl/socket"
