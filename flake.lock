@@ -20,14 +20,14 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1721335127,
-        "narHash": "sha256-B53H5Vn9r1Wm1yAWrrUthYmwRvhSBRF78UvO0DJWvh4=",
+        "lastModified": 1721580671,
+        "narHash": "sha256-+yeKfAHe3GajNGU1mi6grvbozM31l3JzYKpR1QgAT1g=",
         "type": "tarball",
-        "url": "https://github.com/corpix/nixpkgs/archive/v2024-07-19.655026.tar.gz"
+        "url": "https://github.com/corpix/nixpkgs/archive/v2024-07-21.655027.tar.gz"
       },
       "original": {
         "type": "tarball",
-        "url": "https://github.com/corpix/nixpkgs/archive/v2024-07-19.655026.tar.gz"
+        "url": "https://github.com/corpix/nixpkgs/archive/v2024-07-21.655027.tar.gz"
       }
     },
     "root": {
