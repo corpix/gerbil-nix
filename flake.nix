@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "tarball+https://github.com/corpix/nixpkgs/archive/v2024-07-21.655028.tar.gz";
+    nixpkgs.url = "tarball+https://github.com/corpix/nixpkgs/archive/v2024-07-23.655029.tar.gz";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
